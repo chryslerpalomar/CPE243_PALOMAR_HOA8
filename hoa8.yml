@@ -1,0 +1,32 @@
+---
+- hosts: all
+  become: true
+  pre_tasks:
+
+  - name: Ensure dpkg is configured
+    raw: sudo dpkg --configure -a
+    ignore_errors: yes
+    changed_when: false
+
+  - name: install updates 
+    tags: always
+    apt:
+      upgrade: yes
+      update_cache: yes
+      cache_valid_time: 86400
+
+- hosts: ControlNode
+  become: true
+  tasks:
+    - name: Collect PCAP file to ManageNode
+      fetch:
+        src: pcap_files/firstpcap.pcap
+        dest: collected_pcaps/
+        flat: yes
+
+- hosts: ManageNode
+  become: true
+  tasks:
+    - name: Extract executable from PCAP
+      command: "tshark -r /home/chrysler/CPE243_PALOMAR_HOA8/collected_pcaps/firstpcap.pcap -w /home/chrysler/CPE243_PALOMAR_HOA8/extracted_pcaps/extracted_executable -Y 'tcp'"
+
